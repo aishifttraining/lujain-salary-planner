@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Salary & Job Offer Planner</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body dir="ltr">
+
+  <!-- Decorative background: gradient + floating glow orbs. Pure CSS, no images. -->
+  <div class="bg-scene no-print" aria-hidden="true">
+    <span class="orb orb-1"></span>
+    <span class="orb orb-2"></span>
+    <span class="orb orb-3"></span>
+    <span class="ripple ripple-1"></span>
+    <span class="ripple ripple-2"></span>
+    <span class="ripple ripple-3"></span>
+    <span class="bubble bubble-1"></span>
+    <span class="bubble bubble-2"></span>
+    <span class="bubble bubble-3"></span>
+    <span class="bubble bubble-4"></span>
+    <span class="bubble bubble-5"></span>
+    <span class="bubble bubble-6"></span>
+  </div>
+
+  <!-- Glowing 3D perspective grid floor, deep in the background. Purely
+       decorative, static (no JS), hidden in print. -->
+  <div class="grid-floor no-print" aria-hidden="true">
+    <div class="grid-floor-plane"></div>
+  </div>
+
+  <!-- Dedicated 3D parallax layer: CSS-only glassmorphic shapes, driven by
+       script.js's scroll/mouse-based transform loop. Never blocks clicks,
+       hidden in print. -->
+  <div class="bg-3d-layer no-print" id="bg3dLayer" aria-hidden="true">
+    <span class="float-obj float-sphere float-1" data-depth="0.25" data-speed="1"></span>
+    <span class="float-obj float-sphere float-2" data-depth="0.55" data-speed="1.4"></span>
+    <span class="float-obj float-coin float-3" data-depth="0.4" data-speed="0.8"></span>
+    <span class="float-obj float-ring float-4" data-depth="0.7" data-speed="1.2"></span>
+    <span class="float-obj float-gem float-5" data-depth="0.3" data-speed="1.6"></span>
+    <span class="float-obj float-cube float-6" data-depth="0.6" data-speed="0.9"></span>
+  </div>
+
+  <div class="mascot mascot-corner no-print" id="mascotCorner" aria-hidden="true">
+    <span class="mascot-body mascot-body-horned">
+      <span class="mascot-horn mascot-horn-left"></span>
+      <span class="mascot-horn mascot-horn-right"></span>
+      <span class="mascot-eye mascot-eye-left"><span class="mascot-pupil"></span></span>
+      <span class="mascot-eye mascot-eye-right"><span class="mascot-pupil"></span></span>
+      <span class="mascot-mouth"></span>
+      <span class="mascot-sparkle">✦</span>
+      <span class="mascot-expression" aria-hidden="true"></span>
+    </span>
+    <span class="mascot-fin"></span>
+  </div>
+
+  <main class="app-shell">
+  <div class="app-live">
+
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-icon">💼</div>
+        <div class="brand-text">
+          <strong data-i18n="brand">Offer Planner</strong>
+          <span data-i18n="brandSubtitle">Plan your next opportunity</span>
+        </div>
+        <div class="mascot mascot-header no-print" id="mascotHeader" aria-hidden="true">
+          <span class="mascot-body">
+            <span class="mascot-eye mascot-eye-left"><span class="mascot-pupil"></span></span>
+            <span class="mascot-eye mascot-eye-right"><span class="mascot-pupil"></span></span>
+            <span class="mascot-mouth"></span>
+            <span class="mascot-sparkle">✦</span>
+            <span class="mascot-expression" aria-hidden="true"></span>
+          </span>
+          <span class="mascot-fin"></span>
+        </div>
+      </div>
+
+      <div class="header-controls">
+        <div class="currency-toggle-wrap">
+          <button class="currency-toggle" id="currencyToggle" type="button" aria-label="Toggle currency between SAR and USD">
+            <span class="curr-sar active" data-i18n="currencySarLabel">SAR</span>
+            <span class="curr-usd" data-i18n="currencyUsdLabel">USD</span>
+          </button>
+          <span class="fixed-rate-note" data-i18n="fixedRateNote">Fixed rate: 1 USD = 3.75 SAR</span>
+        </div>
+
+        <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark theme">
+          <span class="theme-dark active" data-i18n="themeDarkLabel">🌙 Dark</span>
+          <span class="theme-light" data-i18n="themeLightLabel">☀️ Light</span>
+        </button>
+
+        <button class="language-toggle" id="languageToggle" type="button" aria-label="Toggle language between English and Arabic">
+          <span class="lang-en active">EN</span>
+          <span class="lang-ar">AR</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="intro reveal">
+      <p class="eyebrow" data-i18n="eyebrow">Salary Calculator</p>
+      <h1 data-i18n="title" data-typewriter="true">Salary & Job Offer Planner</h1>
+      <p data-i18n="subtitle">
+        Compare two job offers side by side and see your estimated monthly take-home salary in real time.
+      </p>
+    </section>
+
+    <div class="toolbar">
+      <button class="btn btn-gold" id="loadExample" type="button">
+        <span aria-hidden="true">⚡</span> <span data-i18n="loadExample">Load Example</span>
+      </button>
+      <button class="btn btn-ghost btn-preset" id="presetGovPrivate" type="button">
+        <span aria-hidden="true">🏛️</span> <span data-i18n="presetGovPrivate">Government vs Private (Demo)</span>
+      </button>
+      <button class="btn btn-ghost btn-preset" id="presetRemoteOnsite" type="button">
+        <span aria-hidden="true">🏠</span> <span data-i18n="presetRemoteOnsite">Fully Remote vs On-Site (Demo)</span>
+      </button>
+      <button class="btn btn-ghost" id="clearAll" type="button" data-i18n="clearAll">
+        Clear All
+      </button>
+      <button class="btn btn-gold btn-print" id="printComparison" type="button">
+        <span aria-hidden="true">🖨️</span> <span data-i18n="printButton">Download PDF / Print Summary</span>
+      </button>
+      <div class="mascot mascot-toolbar no-print" id="mascotToolbar" aria-hidden="true">
+        <span class="mascot-body mascot-body-pill">
+          <span class="mascot-eye mascot-eye-left"><span class="mascot-pupil"></span></span>
+          <span class="mascot-eye mascot-eye-right"><span class="mascot-pupil"></span></span>
+          <span class="mascot-mouth"></span>
+          <span class="mascot-sparkle">✦</span>
+          <span class="mascot-expression" aria-hidden="true"></span>
+        </span>
+        <span class="mascot-fin"></span>
+      </div>
+    </div>
+    <p class="print-hint no-print" data-i18n="printHint">Tip: in the print dialog, choose “Save as PDF”.</p>
+
+    <section class="dashboard reveal">
+
+      <!-- ============ OFFER A ============ -->
+      <article class="glass-card input-card reveal-item" data-offer="A">
+        <div class="winner-badge" id="badgeA" data-i18n="winnerBadge">🏆 Winning Offer</div>
+
+        <h2 class="card-heading">
+          <span class="heading-icon">✦</span>
+          <span data-i18n="offerA">Offer A</span>
+        </h2>
+
+        <div class="fields">
+          <div class="field">
+            <label for="basicSalaryA" data-i18n="basicSalary">Basic Salary</label>
+            <div class="input-wrap">
+              <input id="basicSalaryA" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="housingAllowanceA" data-i18n="housingAllowance">Housing Allowance</label>
+            <div class="input-wrap">
+              <input id="housingAllowanceA" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="transportAllowanceA" data-i18n="transportAllowance">Transport Allowance</label>
+            <div class="input-wrap">
+              <input id="transportAllowanceA" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="deductionRateA" data-i18n="deductionRate">GOSI Deduction Rate</label>
+            <div class="input-wrap">
+              <input id="deductionRateA" type="number" min="0" max="100" step="0.01" value="0" />
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="breakdown" aria-live="polite">
+          <p class="breakdown-title" data-i18n="breakdownTitle">Step-by-Step Breakdown</p>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">1</span>
+              <span data-i18n="stepGrossLabel">Gross Salary = Basic + Housing + Transport</span>
+            </div>
+            <div class="step-formula" id="grossFormulaA">0.00 + 0.00 + 0.00</div>
+            <div class="step-value" id="grossA">0.00 SAR</div>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">2</span>
+              <span data-i18n="stepDeductLabel">GOSI Deduction = (Basic + Housing) × Rate</span>
+            </div>
+            <div class="step-formula" id="deductFormulaA">(0.00) × 0%</div>
+            <div class="step-value" id="deductA">0.00 SAR</div>
+          </div>
+
+          <div class="step step-final">
+            <div class="step-head">
+              <span class="step-num">3</span>
+              <span data-i18n="stepNetLabel">Net Take-Home Pay = Gross − Deduction</span>
+            </div>
+            <div class="step-formula" id="netFormulaA">0.00 − 0.00</div>
+            <div class="step-value step-value-gold" id="netA">0.00 SAR</div>
+          </div>
+        </div>
+
+        <div class="perks">
+          <p class="perks-title" data-i18n="perksTitle">✨ Additional Perks</p>
+
+          <div class="fields fields-row">
+            <div class="field">
+              <label for="annualBonusA" data-i18n="annualBonus">Annual Bonus</label>
+              <div class="input-wrap">
+                <input id="annualBonusA" type="number" min="0" step="0.01" value="0" />
+                <span class="input-suffix currency-suffix">SAR</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="medicalTierA" data-i18n="medicalTier">Medical Insurance</label>
+              <div class="input-wrap select-wrap">
+                <select id="medicalTierA">
+                  <option value="basic" data-i18n="tierBasic">Basic</option>
+                  <option value="premium" data-i18n="tierPremium">Premium</option>
+                  <option value="vip" data-i18n="tierVip">VIP</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="leaveDaysA" data-i18n="leaveDays">Paid Annual Leave (days)</label>
+              <div class="input-wrap">
+                <input id="leaveDaysA" type="number" min="0" step="1" value="0" />
+                <span class="input-suffix" data-i18n="daysUnit">days</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="annual-highlight">
+            <span data-i18n="annualTakeHome">Annual Take-Home Value</span>
+            <strong id="annualA">0.00 SAR</strong>
+            <span class="annual-formula" id="annualFormulaA">(0.00 × 12) + 0.00</span>
+          </div>
+        </div>
+      </article>
+
+      <!-- ============ OFFER B ============ -->
+      <article class="glass-card input-card reveal-item" data-offer="B">
+        <div class="winner-badge" id="badgeB" data-i18n="winnerBadge">🏆 Winning Offer</div>
+
+        <h2 class="card-heading">
+          <span class="heading-icon">✦</span>
+          <span data-i18n="offerB">Offer B</span>
+        </h2>
+
+        <div class="fields">
+          <div class="field">
+            <label for="basicSalaryB" data-i18n="basicSalary">Basic Salary</label>
+            <div class="input-wrap">
+              <input id="basicSalaryB" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="housingAllowanceB" data-i18n="housingAllowance">Housing Allowance</label>
+            <div class="input-wrap">
+              <input id="housingAllowanceB" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="transportAllowanceB" data-i18n="transportAllowance">Transport Allowance</label>
+            <div class="input-wrap">
+              <input id="transportAllowanceB" type="number" min="0" step="0.01" value="0" />
+              <span class="input-suffix currency-suffix">SAR</span>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="deductionRateB" data-i18n="deductionRate">GOSI Deduction Rate</label>
+            <div class="input-wrap">
+              <input id="deductionRateB" type="number" min="0" max="100" step="0.01" value="0" />
+              <span class="input-suffix">%</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="breakdown" aria-live="polite">
+          <p class="breakdown-title" data-i18n="breakdownTitle">Step-by-Step Breakdown</p>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">1</span>
+              <span data-i18n="stepGrossLabel">Gross Salary = Basic + Housing + Transport</span>
+            </div>
+            <div class="step-formula" id="grossFormulaB">0.00 + 0.00 + 0.00</div>
+            <div class="step-value" id="grossB">0.00 SAR</div>
+          </div>
+
+          <div class="step">
+            <div class="step-head">
+              <span class="step-num">2</span>
+              <span data-i18n="stepDeductLabel">GOSI Deduction = (Basic + Housing) × Rate</span>
+            </div>
+            <div class="step-formula" id="deductFormulaB">(0.00) × 0%</div>
+            <div class="step-value" id="deductB">0.00 SAR</div>
+          </div>
+
+          <div class="step step-final">
+            <div class="step-head">
+              <span class="step-num">3</span>
+              <span data-i18n="stepNetLabel">Net Take-Home Pay = Gross − Deduction</span>
+            </div>
+            <div class="step-formula" id="netFormulaB">0.00 − 0.00</div>
+            <div class="step-value step-value-gold" id="netB">0.00 SAR</div>
+          </div>
+        </div>
+
+        <div class="perks">
+          <p class="perks-title" data-i18n="perksTitle">✨ Additional Perks</p>
+
+          <div class="fields fields-row">
+            <div class="field">
+              <label for="annualBonusB" data-i18n="annualBonus">Annual Bonus</label>
+              <div class="input-wrap">
+                <input id="annualBonusB" type="number" min="0" step="0.01" value="0" />
+                <span class="input-suffix currency-suffix">SAR</span>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="medicalTierB" data-i18n="medicalTier">Medical Insurance</label>
+              <div class="input-wrap select-wrap">
+                <select id="medicalTierB">
+                  <option value="basic" data-i18n="tierBasic">Basic</option>
+                  <option value="premium" data-i18n="tierPremium">Premium</option>
+                  <option value="vip" data-i18n="tierVip">VIP</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="leaveDaysB" data-i18n="leaveDays">Paid Annual Leave (days)</label>
+              <div class="input-wrap">
+                <input id="leaveDaysB" type="number" min="0" step="1" value="0" />
+                <span class="input-suffix" data-i18n="daysUnit">days</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="annual-highlight">
+            <span data-i18n="annualTakeHome">Annual Take-Home Value</span>
+            <strong id="annualB">0.00 SAR</strong>
+            <span class="annual-formula" id="annualFormulaB">(0.00 × 12) + 0.00</span>
+          </div>
+        </div>
+      </article>
+
+    </section>
+
+    <!-- ============ BILLS & SAVINGS (shared across both offers) ============ -->
+    <section class="glass-card bills-card reveal">
+      <h2 class="card-heading">
+        <span class="heading-icon">✦</span>
+        <span data-i18n="billsSectionTitle">Monthly Bills & Savings Goal</span>
+      </h2>
+      <p class="section-hint" data-i18n="billsSectionHint">
+        Applied to both offers so you can see which one leaves you more room to save.
+      </p>
+
+      <div class="fields fields-row">
+        <div class="field">
+          <label for="monthlyBills" data-i18n="monthlyBills">Monthly Bills & Commitments</label>
+          <div class="input-wrap">
+            <input id="monthlyBills" type="number" min="0" step="0.01" value="0" />
+            <span class="input-suffix currency-suffix">SAR</span>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="savingsGoal" data-i18n="savingsGoal">Savings Goal</label>
+          <div class="input-wrap">
+            <input id="savingsGoal" type="number" min="0" step="0.01" value="0" />
+            <span class="input-suffix currency-suffix">SAR</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="savings-grid">
+        <div class="savings-col reveal-item" data-offer="A">
+          <p class="savings-col-title"><span data-i18n="offerA">Offer A</span></p>
+          <div class="savings-row">
+            <span data-i18n="remainingIncome">Remaining after Bills</span>
+            <strong id="remainingA">0.00 SAR</strong>
+          </div>
+          <p class="timeline-text" id="timelineA" aria-live="polite"></p>
+        </div>
+
+        <div class="savings-col reveal-item" data-offer="B">
+          <p class="savings-col-title"><span data-i18n="offerB">Offer B</span></p>
+          <div class="savings-row">
+            <span data-i18n="remainingIncome">Remaining after Bills</span>
+            <strong id="remainingB">0.00 SAR</strong>
+          </div>
+          <p class="timeline-text" id="timelineB" aria-live="polite"></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ COMMUTE & REMOTE WORK (shared, per-offer figures) ============ -->
+    <section class="glass-card commute-card reveal">
+      <h2 class="card-heading">
+        <span class="heading-icon">🚗</span>
+        <span data-i18n="commuteSectionTitle">Commute & Remote Work</span>
+      </h2>
+      <p class="section-hint" data-i18n="commuteSectionHint">
+        Optional — commute cost lowers each offer's own remaining income; remote days are compared as a lifestyle perk, not money.
+      </p>
+
+      <div class="savings-grid">
+        <div class="savings-col reveal-item" data-offer="A">
+          <p class="savings-col-title"><span data-i18n="offerA">Offer A</span></p>
+          <div class="fields">
+            <div class="field">
+              <label for="commuteCostA" data-i18n="commuteCost">Monthly Commute / Fuel Cost</label>
+              <div class="input-wrap">
+                <input id="commuteCostA" type="number" min="0" step="0.01" value="0" />
+                <span class="input-suffix currency-suffix">SAR</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="remoteDaysA" data-i18n="remoteDays">Remote Work Days / Month</label>
+              <div class="input-wrap">
+                <input id="remoteDaysA" type="number" min="0" max="31" step="1" value="0" />
+                <span class="input-suffix" data-i18n="daysUnit">days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="savings-col reveal-item" data-offer="B">
+          <p class="savings-col-title"><span data-i18n="offerB">Offer B</span></p>
+          <div class="fields">
+            <div class="field">
+              <label for="commuteCostB" data-i18n="commuteCost">Monthly Commute / Fuel Cost</label>
+              <div class="input-wrap">
+                <input id="commuteCostB" type="number" min="0" step="0.01" value="0" />
+                <span class="input-suffix currency-suffix">SAR</span>
+              </div>
+            </div>
+            <div class="field">
+              <label for="remoteDaysB" data-i18n="remoteDays">Remote Work Days / Month</label>
+              <div class="input-wrap">
+                <input id="remoteDaysB" type="number" min="0" max="31" step="1" value="0" />
+                <span class="input-suffix" data-i18n="daysUnit">days</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SAVINGS GROWTH TIMELINE CHART ============ -->
+    <section class="glass-card chart-card reveal">
+      <h2 class="card-heading">
+        <span class="heading-icon">📈</span>
+        <span data-i18n="chartTitle">Savings Growth Timeline</span>
+      </h2>
+      <p class="section-hint" data-i18n="chartHint">
+        Projected cumulative savings over 12 months for both offers. Hover or tab through the chart for exact figures.
+      </p>
+
+      <div class="chart-legend" id="chartLegend">
+        <span class="legend-item"><span class="legend-swatch legend-a"></span><span data-i18n="offerA">Offer A</span></span>
+        <span class="legend-item"><span class="legend-swatch legend-b"></span><span data-i18n="offerB">Offer B</span></span>
+        <span class="legend-item legend-goal" id="legendGoal"><span class="legend-swatch legend-goal-swatch"></span><span data-i18n="savingsGoal">Savings Goal</span></span>
+      </div>
+
+      <div class="chart-wrap chart-pending" id="chartWrap">
+        <div class="chart-svg-holder" id="chartSvgHolder"></div>
+        <div class="chart-status" id="chartStatus" aria-live="polite"></div>
+        <div class="chart-tooltip" id="chartTooltip" role="status" aria-live="polite"></div>
+      </div>
+
+      <details class="chart-table-details">
+        <summary data-i18n="chartTableSummary">Text summary (12-month savings table)</summary>
+        <div id="chartTableHolder"></div>
+      </details>
+    </section>
+
+    <!-- ============ COMPARISON BANNER ============ -->
+    <section class="glass-card comparison-card reveal" id="comparisonCard">
+      <div class="mascot mascot-compare no-print" id="mascotCompare" aria-hidden="true">
+        <span class="mascot-body mascot-body-rect">
+          <span class="mascot-eye mascot-eye-left"><span class="mascot-pupil"></span></span>
+          <span class="mascot-eye mascot-eye-right"><span class="mascot-pupil"></span></span>
+          <span class="mascot-mouth"></span>
+          <span class="mascot-sparkle">✦</span>
+          <span class="mascot-expression" aria-hidden="true"></span>
+        </span>
+      </div>
+      <h2 class="card-heading">
+        <span class="heading-icon">⚖</span>
+        <span data-i18n="comparisonTitle" data-typewriter="true">Comparison</span>
+      </h2>
+
+      <p class="comparison-summary" id="comparisonSummary" aria-live="polite" data-i18n="comparisonEmpty">
+        Enter both offers to see which one pays more.
+      </p>
+
+      <div class="compare-bars">
+        <div class="compare-bar-row" id="barRowA">
+          <div class="compare-bar-label">
+            <span data-i18n="offerA">Offer A</span>
+            <strong id="barValueA">0.00 SAR</strong>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="barFillA"></div>
+          </div>
+        </div>
+
+        <div class="compare-bar-row" id="barRowB">
+          <div class="compare-bar-label">
+            <span data-i18n="offerB">Offer B</span>
+            <strong id="barValueB">0.00 SAR</strong>
+          </div>
+          <div class="bar-track">
+            <div class="bar-fill" id="barFillB"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ SMART RECOMMENDATION ============ -->
+    <section class="glass-card recommendation-card reveal" id="recommendationCard">
+      <h2 class="card-heading">
+        <span class="heading-icon">✨</span>
+        <span data-i18n="recommendationTitle" data-typewriter="true">Smart Recommendation</span>
+      </h2>
+
+      <p class="recommendation-text" id="recommendationText" aria-live="polite" data-i18n="recEmpty">
+        Enter both offers to get a personalized recommendation.
+      </p>
+    </section>
+
+    <footer class="app-footer">
+      <span data-i18n="footerNote">All numbers stay in your browser. Nothing is saved or sent anywhere.</span>
+    </footer>
+
+  </div><!-- /.app-live -->
+
+  <!-- Printable summary: built by script.js, shown only via @media print. -->
+  <div id="printSummary" class="print-only"></div>
+
+  </main>
+
+  <script src="sample-data/data.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
